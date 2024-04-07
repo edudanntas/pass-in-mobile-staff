@@ -1,22 +1,55 @@
 import { Image, View, Alert } from 'react-native'
 import { useState } from 'react'
 import { MaterialCommunityIcons } from '@expo/vector-icons'
-import { Link, router } from 'expo-router'
+import { Link, Redirect, router } from 'expo-router'
+import { api } from '@/server/api'
 
 import { colors } from '@/styles/colors'
 
+import { useBadgeStore } from '@/store/badge-store'
+
 import { Input } from '@/components/input'
 import Button from '@/components/button'
+import { useCheckinStore } from '@/store/checkin-store'
 
 const Home = () => {
     const [value, setValue] = useState("");
+    const [isLoading, setIsLoading] = useState(false)
 
-    function handleAccessEvent() {
-        if (!value.trim()) {
-            return Alert.alert("Ingresso", "Informe o código do ingresso")
+    const badgeStore = useBadgeStore()
+    const checkinStore = useCheckinStore()
+
+
+    async function handleAccessEvent() {
+        try {
+            if (!value.trim()) {
+                return Alert.alert("Ingresso", "Informe o código do ingresso")
+            }
+            setIsLoading(true)
+
+            const badgeResponseData = await api.get(`/attendees/${value}/badge`)
+            const checkinResponseData = await api.get(`/attendees/${value}/check-in`)
+
+            if (checkinResponseData.status == 200) {
+                checkinStore.save(checkinResponseData.data)
+            }
+            badgeStore.save(badgeResponseData.data.attendeeBadgeDTO);
+
+            setIsLoading(false)
+
+            router.push("/ticket")
+
+        } catch (error) {
+
+            console.log(error);
+            setIsLoading(false)
+
+            Alert.alert("Ingresso", "Ingresso não encontrado")
         }
+    }
 
-        router.push("/ticket")
+    if (badgeStore.data?.checkinURL) {
+        return <Redirect href="/ticket" />
     }
 
     return (
@@ -35,7 +68,7 @@ const Home = () => {
                     />
                 </Input>
 
-                <Button title='Acessar credencial' onPress={handleAccessEvent} />
+                <Button title='Acessar credencial' onPress={handleAccessEvent} isLoading={isLoading} />
 
                 <Link href="/register" className='text-gray-100 text-base font-bold mt-8 text-center'>
                     Ainda não possuí ingresso?

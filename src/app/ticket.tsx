@@ -1,6 +1,7 @@
 import Credential from '@/components/credential'
 import Header from '@/components/header'
-import { ScrollView, Text, TouchableOpacity, View, Alert, Modal } from 'react-native'
+import { ScrollView, Text, TouchableOpacity, View, Alert, Modal, Share } from 'react-native'
+import { MotiView } from 'moti'
 import * as Brightness from 'expo-brightness';
 import { FontAwesome } from '@expo/vector-icons'
 import { colors } from '@/styles/colors'
@@ -8,12 +9,32 @@ import Button from '@/components/button'
 import * as ImagePicker from 'expo-image-picker'
 import { useState } from "react"
 import QRcode from '@/components/QRcode'
+import { useBadgeStore } from '@/store/badge-store';
+import { useCheckinStore } from '@/store/checkin-store';
+import { router } from 'expo-router';
 
 
 const Ticket = () => {
-    const [image, setImage] = useState("")
     const [showQrcode, setShowQRcode] = useState(false)
     const [originalBrightness, setOriginalBrightness] = useState(0);
+
+    const badgeStore = useBadgeStore()
+    const checkinStore = useCheckinStore()
+
+    async function handleShare() {
+        try {
+            if (badgeStore.data?.checkinURL) {
+                await Share.share({
+                    message: badgeStore.data.checkinURL
+                })
+            }
+
+        } catch (error) {
+            console.log(error);
+            Alert.alert("Compartilhar", "Não foi possível compartilhar esse evento.")
+        }
+
+    }
 
     async function getCredentialImage() {
         try {
@@ -24,7 +45,7 @@ const Ticket = () => {
             })
 
             if (result.assets) {
-                setImage(result.assets[0].uri)
+                badgeStore.changeAvatar(result.assets[0].uri)
             }
 
         } catch (error) {
@@ -46,6 +67,19 @@ const Ticket = () => {
 
     }
 
+    function removeTicket() {
+        badgeStore.remove()
+        checkinStore.remove()
+        router.push("/")
+    }
+
+    function alertRemoveTicket() {
+        Alert.alert("Ingresso", "Deseja remover o seu ingresso?", [
+            { text: "Sim", onPress: () => removeTicket() },
+            { text: "Não" }
+        ])
+    }
+
     return (
         <View className='flex-1 bg-green-500'>
             <Header title="Minhas Credenciais" />
@@ -56,30 +90,45 @@ const Ticket = () => {
                 showsVerticalScrollIndicator={false}
             >
                 <Credential
-                    image={image}
                     handleChangeAvatar={getCredentialImage}
                     handleShowQRcode={toggleModal}
+                    data={badgeStore.data!}
+                    checkin={checkinStore.data!}
                 />
 
-                <FontAwesome name='angle-double-down' size={24} color={colors.gray[300]}
-                    className='self-center my-6'
-                />
+                <MotiView
+                    from={{
+                        translateY: 0
+                    }}
+                    animate={{
+                        translateY: 10
+                    }}
+                    transition={{
+                        loop: true,
+                        type: 'timing',
+                        duration: 700
+                    }}
+                >
+                    <FontAwesome name='angle-double-down' size={24} color={colors.gray[300]}
+                        className='self-center my-6'
+                    />
+                </MotiView>
 
                 <Text className='text-white font-bold text-2xl mt-4'>Compartilhar credencial</Text>
 
 
-                <Text className='text-white font-regular text-base mt-1 mb-6'>Mostre ao mundo que você vai participar da Festa do Dudu</Text>
+                <Text className='text-white font-regular text-base mt-1 mb-6'>Mostre ao mundo que você vai participar do evento {badgeStore.data?.eventTitle}</Text>
 
-                <Button title='Compartilhar' />
+                <Button title='Compartilhar' onPress={handleShare} />
 
-                <TouchableOpacity activeOpacity={0.7} className='mt-10'>
+                <TouchableOpacity activeOpacity={0.7} className='mt-10' onPress={alertRemoveTicket}>
                     <Text className='text-base text-white font-bold text-center mb-10'>Remover Ingresso</Text>
                 </TouchableOpacity>
             </ScrollView>
 
             <Modal visible={showQrcode} statusBarTranslucent animationType='slide'>
                 <View className='flex-1 bg-green-500 items-center justify-center'>
-                    <QRcode value='teste' size={300} />
+                    <QRcode value={badgeStore.data?.checkinURL!} size={300} />
                     <TouchableOpacity onPress={toggleModal}>
                         <Text className='font-bold text-orange-500 text-2xl mt-10 text-center'>Fechar</Text>
                     </TouchableOpacity>
