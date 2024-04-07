@@ -1,5 +1,5 @@
 {
-  "name": "pass-in-mobile",
+  "name": "pass-in-mobile-staff",
   "main": "expo-router/entry",
   "version": "1.0.0",
   "scripts": {
@@ -40,7 +40,8 @@
     "react-native-svg": "14.1.0",
     "react-native-web": "~0.19.6",
     "tailwindcss": "^3.4.3",
-    "zustand": "^4.5.2"
+    "zustand": "^4.5.2",
+    "expo-camera": "~14.1.1"
   },
   "devDependencies": {
     "@babel/core": "^7.20.0",

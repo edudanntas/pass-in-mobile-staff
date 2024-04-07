@@ -1,6 +1,6 @@
 import '@/styles/global.css';
 import { Slot } from 'expo-router';
-import { StatusBar } from 'expo-status-bar';
+
 
 import {
     useFonts,
@@ -10,6 +10,7 @@ import {
 } from '@expo-google-fonts/roboto'
 
 import { Loader } from '@/components/loader';
+import { StatusBar } from 'react-native';
 
 const Layout = () => {
     const [isLoaded] = useFonts({
@@ -20,7 +21,6 @@ const Layout = () => {
 
     return (
         <>
-            <StatusBar style='light' />
             {isLoaded ? <Slot /> : <Loader />}
         </>
     )

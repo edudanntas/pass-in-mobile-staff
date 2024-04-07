@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "pass-in-mobile",
-    "slug": "pass-in-mobile",
+    "name": "pass-in-mobile-staff",
+    "slug": "pass-in-mobile-staff",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
